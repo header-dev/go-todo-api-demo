@@ -1,6 +1,7 @@
 package main
 
 import (
+	"todo-app/auth"
 	"todo-app/todo"
 
 	"net/http"
@@ -24,6 +25,8 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	r.GET("/token", auth.AccessToken)
 
 	handler := todo.NewTodoHandler(db)
 	r.POST("/todos", handler.NewTask)

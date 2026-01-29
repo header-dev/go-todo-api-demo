@@ -2,13 +2,16 @@ package todo
 
 import (
 	"net/http"
+	"strings"
+	"todo-app/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	"gorm.io/gorm"
 )
 
 type Todo struct {
-	Title string `json:"text"`
+	Title string `json:"text" validate:"required"`
 	gorm.Model
 }
 
@@ -17,16 +20,37 @@ func (Todo) TableName() string {
 }
 
 type TodoHandler struct {
-	db *gorm.DB
+	db       *gorm.DB
+	validate *validator.Validate
 }
 
 func NewTodoHandler(db *gorm.DB) *TodoHandler {
-	return &TodoHandler{db: db}
+
+	return &TodoHandler{
+		db:       db,
+		validate: validator.New(),
+	}
 }
 
 func (t *TodoHandler) NewTask(c *gin.Context) {
+
+	s := c.Request.Header.Get("Authorization")
+	tokenString := strings.TrimPrefix(s, "Bearer ")
+	if err := auth.Protect(tokenString); err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	var todo Todo
 	if err := c.ShouldBindJSON(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err := t.validate.Struct(todo)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
