@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -28,15 +27,4 @@ func AccessToken(c *gin.Context) {
 		"token": ss,
 	})
 
-}
-
-func Protect(tokenString string) error {
-	_, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", t.Header["alg"])
-		}
-		return []byte("==signature=="), nil
-	})
-
-	return err
 }
