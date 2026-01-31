@@ -8,23 +8,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AccessToken(c *gin.Context) {
+func AccessToken(signature string) gin.HandlerFunc {
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
-		Issuer:    "idevalot",
-	})
-
-	ss, err := token.SignedString([]byte("==signature=="))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+	return func(c *gin.Context) {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+			Issuer:    "idevalot",
 		})
-		return
+		ss, err := token.SignedString([]byte(signature))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"token": ss,
+		})
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token": ss,
-	})
-
 }
