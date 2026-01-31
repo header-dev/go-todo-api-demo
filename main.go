@@ -21,7 +21,13 @@ import (
 
 func main() {
 
-	err := godotenv.Load("local.env")
+	_, err := os.Create("/tmp/live")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove("/tmp/live")
+
+	err = godotenv.Load("local.env")
 	if err != nil {
 		log.Println("please consider environment variables: %s", err)
 	}
@@ -34,6 +40,9 @@ func main() {
 	db.AutoMigrate(&todo.Todo{})
 
 	r := gin.Default()
+	r.GET("/health", func(ctx *gin.Context) {
+		ctx.Status(200)
+	})
 	r.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "pong",
